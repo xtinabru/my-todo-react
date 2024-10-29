@@ -7,7 +7,7 @@ function App() {
   const[tasks, setTasks] = useState([])
 
   const addTask = () => {
-    if (task.trim() !== '') { // Check empty task!
+    if (task.trim() !== '') { // Check empty task
       setTasks((prevTasks) => [...prevTasks, task]); 
       setTask(''); 
     }
