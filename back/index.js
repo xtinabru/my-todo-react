@@ -36,6 +36,10 @@ app.get('/',(req,res) =>{
 app.post('/create',(req,res) => {
   const pool = openDb()
 
+  if (!req.body.description) {
+    return res.status(400).json({ error: 'Description is required' });
+  }
+
   pool.query('insert into task (description) values ($1) returning *',
     [req.body.description],
     (error, result) => {
