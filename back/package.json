@@ -5,20 +5,20 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-  "test": "mocha *.test.js",
-  "DevStart": "nodemon index.js"
-},
+    "test": "mocha *.test.js",
+    "DevStart": "nodemon index.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.1",
-    "nodemon": "^3.1.7",
     "pg": "^8.13.1"
   },
   "devDependencies": {
     "chai": "^5.1.2",
-    "mocha": "^10.7.3"
+    "mocha": "^10.7.3",
+    "nodemon": "^3.1.7"
   }
 }
