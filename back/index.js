@@ -1,71 +1,29 @@
-import express from 'express'
-import cors from 'cors'
-import pgk from 'pg'
+import express from 'express';
+import cors from 'cors';
+import todoRouter from './routers/todoRouter.js';
 
-const port = 3001
-const { Pool } = pgk
+const port = process.env.PORT || 3001;
 
-const app = express()
-app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({extended: false}))
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use('/', todoRouter)
 
-const openDb = () => {
-  const pool = new Pool ({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'todo',
-    password: '1234',
-    port: 5433
-  })
-  return pool
-}
-
-app.get('/',(req,res) =>{
-  const pool = openDb()
-
-  pool.query('select * from task',(error, result)=>{
-    if(error){
-      console.error('Error', error)
-      return res.status(500).json({error: error.message})
-    }
-    return res.status(200).json(result.rows)
-  })
-})
-
-app.post('/create',(req,res) => {
-  const pool = openDb()
-
-  if (!req.body.description) {
-    return res.status(400).json({ error: 'Description is required' });
-  }
-
-  pool.query('insert into task (description) values ($1) returning *',
-    [req.body.description],
-    (error, result) => {
-      if (error) {
-        return res.status(500).json({error: error.message})
-      }
-      return res.status(200).json({id: result.rows[0].id})
-    }
-  )
-}
-)
-
-app.delete('/delete/:id',(req,res) => {
-  const pool = openDb()
-  const id = parseInt(req.params.id)
-  pool.query('delete from task where id = $1',
-    [id],
-    (error, result) => {
-      if (error) {
-        return res.status(500).json({error: error.message})
-      }
-      return res.status(200).json({id:id})
-    }
-  )
-})
-
+// start
 app.listen(port, () => {
-  console.log('Server runs')
-})
+  console.log(`Server is running on port ${port}`);
+});
+
+// Middleware to handle errors
+app.use((err, req, res, next) => {
+  console.error(err.stack); // logging errors on server
+  
+  // define status (if exists) or 500 
+  const statusCode = err.status || 500;
+
+  // send JSON with error
+  res.status(statusCode).json({
+    error: err.message || 'Internal Server Error'
+  });
+});
