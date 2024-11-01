@@ -1,4 +1,4 @@
-import { pool } from './helper/db.js'; 
+import { pool } from '../helper/db.js'; ; 
 import { Router } from "express";
 import { emptyOrRows } from '../helper/utils.js'; 
 
