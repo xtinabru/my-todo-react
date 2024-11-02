@@ -77,7 +77,7 @@ describe('DELETE task', () => {
 
 // test for register endpoint
 describe('POST register', () => {
-  const email = 'register@foo.com'
+  const email = 'register${Date.now()}@foo.com'
   const password = 'register123'
   it('should register with valid email and password', async () => {
     const response = await fetch(base_url + 'user/register', {
