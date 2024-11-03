@@ -1,5 +1,7 @@
-import { initializeTestDb } from "./helper/test.js";
+import { initializeTestDb, insertTestUser } from "./helper/test.js";
 import { expect } from "chai";
+import fetch from "node-fetch";
+import { pool } from './helper/db.js'; 
 
 const base_url = 'http://localhost:3001/';
 
@@ -76,25 +78,72 @@ describe('DELETE task', () => {
   });
 });
 
-// Test for register endpoint
+/// Test for register endpoint
 describe('POST register', () => {
-  const email = `register${Date.now()}@foo.com`;
+  const email = 'newuser123@foo.com'; // Обязательно используйте уникальный email для теста
   const password = 'register123';
 
-  it('should register with valid email and password', async () => {
+  beforeEach(async () => {
+      await initializeTestDb(); // Инициализация базы данных перед каждым тестом
+  });
+
+  it('should register with new email and password', async () => {
+    const uniqueEmail = `newuser${Date.now()}@foo.com`; // Генерируем уникальный email
     const response = await fetch(base_url + 'user/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: uniqueEmail,  // Используем уникальный email
+            password: 'password123'
+        })
+    });
+ 
+    const data = await response.json();
+    console.log('Registration response:', data);  // Логируем ответ регистрации
+    expect(response.status).to.equal(201, data.error); // Проверяем статус ответа
+ });
+ 
+});
+
+
+
+
+// Test for login endpoint
+describe('POST login', () => {
+  const email = 'testuser123@foo.com'; 
+  const password = 'register123'; // Пароль должен быть таким же, как и при регистрации
+
+  before((done) => {
+   
+    pool.query('DELETE FROM account WHERE email = $1', [email], (error) => {
+      if (error) {
+        console.error('Error deleting test user:', error);
+        return done(error);
+      }
+      done(); 
+    });
+  });
+
+  it('should login with valid credentials', async () => {
+    const response = await fetch(base_url + 'user/login', {
       method: 'post',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type':'application/json'
       },
       body: JSON.stringify({
         'email': email,
-        'password': password
+        'password': password 
       })
     });
+  
     const data = await response.json();
-    expect(response.status).to.equal(201, data.error);
+    console.log('Login response:', data);  
+    expect(response.status).to.equal(200, data.error);
     expect(data).to.be.an('object');
-    expect(data).to.include.all.keys('id', 'email');
+    expect(data).to.include.all.keys('id', 'email', 'token');
   });
 });
+
+
