@@ -7,9 +7,11 @@ create table account (
   password varchar(255) not null
 );
 
-create table task (
-  id serial primary key,
-  description varchar(255) not null
+CREATE TABLE task (
+  id SERIAL PRIMARY KEY,
+  description VARCHAR(255) NOT NULL,
+  userId INT NOT NULL,
+  FOREIGN KEY (userId) REFERENCES account(id)
 );
 
 insert into task (description) values ('My test task');

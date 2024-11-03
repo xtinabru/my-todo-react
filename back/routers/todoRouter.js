@@ -1,40 +1,45 @@
 import { pool } from '../helper/db.js'; 
 import { Router } from "express";
 import { emptyOrRows } from '../helper/utils.js'; 
-import auth from '../helper/auth.js'; // Импортируем middleware auth
+import auth from '../helper/auth.js';
 
 const router = Router();
 
-// GET
-router.get('/', (req, res) => {
-  pool.query('SELECT * FROM task', (error, result) => {
+// GET - Получение задач для текущего пользователя
+router.get('/', auth, (req, res) => {
+  const userId = req.user.id;
+
+  pool.query('SELECT * FROM task WHERE user_id = $1', [userId], (error, result) => {
     if (error) {
       console.error('Error', error);
       return res.status(500).json({ error: error.message });
     }
-    const rows = emptyOrRows(result); // use emptyOrRows
+    const rows = emptyOrRows(result);
     return res.status(200).json(rows);
   });
 });
 
-// POST (создание задачи)
-router.post('/create', auth, (req, res) => { // Добавляем middleware auth
+// POST - Создание задачи
+router.post('/create', auth, (req, res) => {
   if (!req.body.description) {
     return res.status(400).json({ error: 'Description is required' });
   }
 
-  pool.query('INSERT INTO task (description) VALUES ($1) RETURNING *', [req.body.description], (error, result) => {
+  const userId = req.user.id;
+  pool.query('INSERT INTO task (description, user_id) VALUES ($1, $2) RETURNING *', [req.body.description, userId], (error, result) => {
     if (error) {
       return res.status(500).json({ error: error.message });
     }
-    return res.status(200).json({ id: result.rows[0].id });
+    return res.status(200).json({ id: result.rows[0].id, description: req.body.description });
   });
 });
 
-// DELETE (удаление задачи)
-router.delete('/delete/:id', auth, (req, res) => { // Добавляем middleware auth
+// DELETE - Удаление задачи
+router.delete('/delete/:id', auth, (req, res) => {
   const id = parseInt(req.params.id);
-  pool.query('DELETE FROM task WHERE id = $1', [id], (error) => {
+  const userId = req.user.id;
+
+  pool.query('DELETE FROM task WHERE id = $1 AND user_id = $2', [id, userId], (error) => {
     if (error) {
       return res.status(500).json({ error: error.message });
     }
