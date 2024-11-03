@@ -41,7 +41,7 @@ export default function Authentication({ authenticationMode }) {
           <label>Email</label>
           <input 
             type='email' 
-            value={user.email} 
+            value={user.email|| ''} 
             onChange={e => setUser({ ...user, email: e.target.value })} 
             required 
           />
@@ -50,7 +50,7 @@ export default function Authentication({ authenticationMode }) {
           <label>Password</label>
           <input 
             type='password' 
-            value={user.password} 
+            value={user.password|| ''} 
             onChange={e => setUser({ ...user, password: e.target.value })} 
             required 
           />
