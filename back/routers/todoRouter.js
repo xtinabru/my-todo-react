@@ -1,6 +1,7 @@
-import { pool } from '../helper/db.js'; ; 
+import { pool } from '../helper/db.js'; 
 import { Router } from "express";
 import { emptyOrRows } from '../helper/utils.js'; 
+import auth from '../helper/auth.js'; // Импортируем middleware auth
 
 const router = Router();
 
@@ -16,8 +17,8 @@ router.get('/', (req, res) => {
   });
 });
 
-// POST
-router.post('/create', (req, res) => {
+// POST (создание задачи)
+router.post('/create', auth, (req, res) => { // Добавляем middleware auth
   if (!req.body.description) {
     return res.status(400).json({ error: 'Description is required' });
   }
@@ -30,8 +31,8 @@ router.post('/create', (req, res) => {
   });
 });
 
-// DELETE
-router.delete('/delete/:id', (req, res) => {
+// DELETE (удаление задачи)
+router.delete('/delete/:id', auth, (req, res) => { // Добавляем middleware auth
   const id = parseInt(req.params.id);
   pool.query('DELETE FROM task WHERE id = $1', [id], (error) => {
     if (error) {

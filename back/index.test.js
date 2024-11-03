@@ -1,9 +1,18 @@
 import { initializeTestDb, insertTestUser } from "./helper/test.js";
 import { expect } from "chai";
 import fetch from "node-fetch";
-import { pool } from './helper/db.js'; 
+import { pool } from './helper/db.js';
+import jwt from "jsonwebtoken"; // Импортируем библиотеку для работы с JWT
+import dotenv from 'dotenv';
+
+dotenv.config(); // Подключаем переменные окружения
 
 const base_url = 'http://localhost:3001/';
+
+// Функция для генерации токена
+const getToken = (user) => {
+  return jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+};
 
 // Initialize database before running tests
 before(() => {
@@ -24,11 +33,36 @@ describe('GET Tasks', () => {
 
 // Test suite for creating tasks
 describe('POST task', () => {
+  let token;
+  let testUser;
+
+  // Регистрация пользователя перед тестами
+  before(async () => {
+    // Создаем тестового пользователя
+    const email = `testuser${Date.now()}@foo.com`;
+    const password = 'password123';
+
+    const userResponse = await fetch(`${base_url}user/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    const userData = await userResponse.json();
+    testUser = userData; // Сохраняем данные пользователя
+
+    // Генерируем токен для нового пользователя
+    token = getToken(testUser);
+  });
+
   it('should post a task', async () => {
     const response = await fetch(base_url + 'create', {
       method: 'post',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
       },
       body: JSON.stringify({ 'description': 'Task from unit test' })
     });
@@ -42,7 +76,8 @@ describe('POST task', () => {
     const response = await fetch(base_url + 'create', {
       method: 'post',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
       },
       body: JSON.stringify({ 'description': null })
     });
@@ -56,9 +91,47 @@ describe('POST task', () => {
 
 // Test suite for deleting tasks
 describe('DELETE task', () => {
+  let token;
+  let testUser;
+
+  // Регистрация пользователя перед тестами
+  before(async () => {
+    // Создаем тестового пользователя
+    const email = `testuser${Date.now()}@foo.com`;
+    const password = 'password123';
+
+    const userResponse = await fetch(`${base_url}user/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const userData = await userResponse.json();
+    testUser = userData; // Сохраняем данные пользователя
+
+    // Генерируем токен для нового пользователя
+    token = getToken(testUser);
+  });
+
   it('should delete a task', async () => {
-    const response = await fetch(base_url + 'delete/1', {
-      method: 'delete'
+    // Создаем задачу перед её удалением
+    const createResponse = await fetch(base_url + 'create', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+      },
+      body: JSON.stringify({ 'description': 'Task to delete' })
+    });
+    const createData = await createResponse.json();
+    
+    const response = await fetch(base_url + `delete/${createData.id}`, {
+      method: 'delete',
+      headers: {
+        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+      }
     });
     const data = await response.json();
     expect(response.status).to.equal(200);
@@ -68,7 +141,10 @@ describe('DELETE task', () => {
 
   it('should not delete a task with SQL injection', async () => {
     const response = await fetch(base_url + 'delete/invalid_id', {
-      method: 'delete'
+      method: 'delete',
+      headers: {
+        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+      }
     });
     
     const data = await response.json();
@@ -78,7 +154,7 @@ describe('DELETE task', () => {
   });
 });
 
-/// Test for register endpoint
+// Test for register endpoint
 describe('POST register', () => {
   const email = 'newuser123@foo.com'; // Обязательно используйте уникальный email для теста
   const password = 'register123';
@@ -104,11 +180,7 @@ describe('POST register', () => {
     console.log('Registration response:', data);  // Логируем ответ регистрации
     expect(response.status).to.equal(201, data.error); // Проверяем статус ответа
  });
- 
 });
-
-
-
 
 // Test for login endpoint
 describe('POST login', () => {
@@ -116,7 +188,6 @@ describe('POST login', () => {
   const password = 'register123'; // Пароль должен быть таким же, как и при регистрации
 
   before((done) => {
-   
     pool.query('DELETE FROM account WHERE email = $1', [email], (error) => {
       if (error) {
         console.error('Error deleting test user:', error);
@@ -145,5 +216,3 @@ describe('POST login', () => {
     expect(data).to.include.all.keys('id', 'email', 'token');
   });
 });
-
-
