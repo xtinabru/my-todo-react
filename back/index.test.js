@@ -19,50 +19,70 @@ before(() => {
   initializeTestDb();
 });
 
+let token; // Объявляем переменную токена на уровне всего файла
+let testUser; // Объявляем переменную тестового пользователя
+
+// Регистрация пользователя перед всеми тестами
+before(async () => {
+  const email = `testuser${Date.now()}@foo.com`;
+  const password = 'password123';
+
+  const userResponse = await fetch(`${base_url}user/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+  
+  const userData = await userResponse.json();
+  testUser = userData; // Сохраняем данные пользователя
+
+  // Генерируем токен для нового пользователя
+  token = getToken(testUser);
+});
+
+// Test suite for getting tasks
 // Test suite for getting tasks
 describe('GET Tasks', () => {
-  it('should get all tasks', async () => {
-    const response = await fetch('http://localhost:3001');
-    const data = await response.json();
+  before(async () => {
+    // Создание задачи перед тестом на получение задач
+    const response = await fetch(base_url + 'create', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Используем токен для авторизации
+      },
+      body: JSON.stringify({ 'description': 'Initial task for testing' })
+    });
 
+    // Вы можете добавить проверку на успешное создание задачи
     expect(response.status).to.equal(200);
-    expect(data).to.be.an('array').that.is.not.empty;
-    expect(data[0]).to.include.all.keys('id', 'description');
+  });
+
+  it('should get all tasks', async () => {
+    const response = await fetch(base_url, {
+      headers: {
+        'Authorization': `Bearer ${token}` // Используем токен здесь
+      }
+    });
+    
+    const data = await response.json();
+    expect(response.status).to.equal(200);
+    expect(data).to.be.an('array').that.is.not.empty; // Проверяем, что массив не пустой
+    expect(data[0]).to.include.all.keys('id', 'description'); // Проверяем структуру объекта
   });
 });
 
+
 // Test suite for creating tasks
 describe('POST task', () => {
-  let token;
-  let testUser;
-
-  // Регистрация пользователя перед тестами
-  before(async () => {
-    // Создаем тестового пользователя
-    const email = `testuser${Date.now()}@foo.com`;
-    const password = 'password123';
-
-    const userResponse = await fetch(`${base_url}user/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-    
-    const userData = await userResponse.json();
-    testUser = userData; // Сохраняем данные пользователя
-
-    // Генерируем токен для нового пользователя
-    token = getToken(testUser);
-  });
-
   it('should post a task', async () => {
     const response = await fetch(base_url + 'create', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+        'Authorization': `Bearer ${token}` // Используем токен здесь
       },
       body: JSON.stringify({ 'description': 'Task from unit test' })
     });
@@ -77,7 +97,7 @@ describe('POST task', () => {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+        'Authorization': `Bearer ${token}` // Используем токен здесь
       },
       body: JSON.stringify({ 'description': null })
     });
@@ -91,37 +111,13 @@ describe('POST task', () => {
 
 // Test suite for deleting tasks
 describe('DELETE task', () => {
-  let token;
-  let testUser;
-
-  // Регистрация пользователя перед тестами
-  before(async () => {
-    // Создаем тестового пользователя
-    const email = `testuser${Date.now()}@foo.com`;
-    const password = 'password123';
-
-    const userResponse = await fetch(`${base_url}user/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const userData = await userResponse.json();
-    testUser = userData; // Сохраняем данные пользователя
-
-    // Генерируем токен для нового пользователя
-    token = getToken(testUser);
-  });
-
   it('should delete a task', async () => {
     // Создаем задачу перед её удалением
     const createResponse = await fetch(base_url + 'create', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+        'Authorization': `Bearer ${token}` // Используем токен здесь
       },
       body: JSON.stringify({ 'description': 'Task to delete' })
     });
@@ -130,7 +126,7 @@ describe('DELETE task', () => {
     const response = await fetch(base_url + `delete/${createData.id}`, {
       method: 'delete',
       headers: {
-        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+        'Authorization': `Bearer ${token}` // Используем токен здесь
       }
     });
     const data = await response.json();
@@ -143,7 +139,7 @@ describe('DELETE task', () => {
     const response = await fetch(base_url + 'delete/invalid_id', {
       method: 'delete',
       headers: {
-        'Authorization': `Bearer ${token}` // Добавляем токен в заголовок
+        'Authorization': `Bearer ${token}` // Используем токен здесь
       }
     });
     
@@ -155,32 +151,32 @@ describe('DELETE task', () => {
 });
 
 // Test for register endpoint
+// Тесты на регистрацию
 describe('POST register', () => {
-  const email = 'newuser123@foo.com'; // Обязательно используйте уникальный email для теста
+  const email = `newuser${Date.now()}@foo.com`; // Уникальный email
   const password = 'register123';
 
   beforeEach(async () => {
-      await initializeTestDb(); // Инициализация базы данных перед каждым тестом
+    await initializeTestDb(); // Инициализация базы данных перед каждым тестом
   });
 
   it('should register with new email and password', async () => {
-    const uniqueEmail = `newuser${Date.now()}@foo.com`; // Генерируем уникальный email
     const response = await fetch(base_url + 'user/register', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            email: uniqueEmail,  // Используем уникальный email
-            password: 'password123'
-        })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email, // Используем уникальный email
+        password 
+      })
     });
- 
+
     const data = await response.json();
-    console.log('Registration response:', data);  // Логируем ответ регистрации
     expect(response.status).to.equal(201, data.error); // Проверяем статус ответа
- });
+  });
 });
+
 
 // Test for login endpoint
 describe('POST login', () => {
