@@ -5,7 +5,7 @@ import auth from '../helper/auth.js';
 
 const router = Router();
 
-// GET - Получение задач для текущего пользователя
+// GET 
 router.get('/', auth, (req, res) => {
   const userId = req.user.id;
 
@@ -19,7 +19,7 @@ router.get('/', auth, (req, res) => {
   });
 });
 
-// POST - Создание задачи
+// POST 
 router.post('/create', auth, (req, res) => {
   if (!req.body.description) {
     return res.status(400).json({ error: 'Description is required' });
@@ -34,7 +34,7 @@ router.post('/create', auth, (req, res) => {
   });
 });
 
-// DELETE - Удаление задачи
+// DELETE 
 router.delete('/delete/:id', auth, (req, res) => {
   const id = parseInt(req.params.id);
   const userId = req.user.id;

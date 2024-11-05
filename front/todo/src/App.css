@@ -1,11 +1,21 @@
-#container {
-  padding: 16px;
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: #121212;
+  color: #e0e0e0;
+  line-height: 1.6;
+  padding: 0 20px;
 }
 
-li {
-  margin-bottom: 8px;
+a {
+  color: #4c9aff;
+  text-decoration: none;
 }
 
-.delete-button {
-  margin-left: 16px;
+a:hover {
+  text-decoration: underline;
+}
+
+button, input {
+  font-family: inherit;
 }

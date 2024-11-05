@@ -1,0 +1,72 @@
+.authentication-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #303030;
+}
+
+h3 {
+  color: #4c9aff;
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+}
+
+div {
+  margin-bottom: 15px;
+}
+
+label {
+  color: #e0e0e0;
+  margin-bottom: 10px;
+}
+
+input {
+  background-color: #333;
+  border: 1px solid #555;
+  color: #e0e0e0;
+  display:flex;
+  padding: 12px;
+  width: 100%;
+  margin: 4px;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: #4c9aff;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  color: white;
+  margin: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #306fd5;
+}
+
+.error-message {
+  color: #ff4c4c;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.link {
+  text-align: center;
+}
+
+a {
+  color: #4c9aff;
+  text-align: center;
+}

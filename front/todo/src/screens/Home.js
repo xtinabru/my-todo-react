@@ -13,24 +13,24 @@ function Home() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    axios.get(url, { headers: { Authorization: `Bearer ${user.token}` } }) // Добавляем заголовок авторизации
+    axios.get(url, { headers: { Authorization: `Bearer ${user.token}` } })
       .then(response => {
         setTasks(response.data);
       })
       .catch(error => {
         setError(error.response && error.response.data && error.response.data.error ? error.response.data.error : error.message);
       });
-  }, [user.token]); // Следим за изменениями токена
+  }, [user.token]);
 
   const addTask = () => {
-    if (!task.trim()) return; // Не добавлять пустые задачи
+    if (!task.trim()) return;
 
-    const headers = { headers: { Authorization: `Bearer ${user.token}` } }; // Добавляем Bearer перед токеном
+    const headers = { headers: { Authorization: `Bearer ${user.token}` } };
 
     axios.post(url + '/create', { description: task }, headers)
       .then(response => {
-        setTasks([...tasks, { id: response.data.id, description: task }]); // Добавляем новую задачу
-        setTask(''); // Очищаем поле ввода
+        setTasks([...tasks, { id: response.data.id, description: task }]);
+        setTask('');
       })
       .catch(error => {
         setError(error.response && error.response.data && error.response.data.error ? error.response.data.error : error.message);
@@ -38,7 +38,7 @@ function Home() {
   };
 
   const deleteTask = (id) => {
-    const headers = { headers: { Authorization: `Bearer ${user.token}` } }; // Добавляем Bearer перед токеном
+    const headers = { headers: { Authorization: `Bearer ${user.token}` } };
     axios.delete(url + '/delete/' + id, headers)
       .then(() => {
         const withoutRemoved = tasks.filter((item) => item.id !== id);
@@ -53,7 +53,7 @@ function Home() {
     <div id="container">
       <h3>Todos</h3>
       {error && <div className="error-message">{error}</div>}
-      <form onSubmit={(e) => e.preventDefault()}>
+      <form onSubmit={(e) => { e.preventDefault(); addTask(); }}>
         <input
           placeholder="Add new task"
           value={task}

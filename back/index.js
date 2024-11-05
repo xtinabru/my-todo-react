@@ -3,6 +3,7 @@ import cors from 'cors';
 import todoRouter from './routers/todoRouter.js';
 import userRouter from './routers/userRouter.js';
 import dotenv from 'dotenv'; 
+
 dotenv.config(); 
 
 const port = process.env.PORT || 3001;
